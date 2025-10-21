@@ -1,56 +1,123 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>長井ゲーム（オンライン対戦版）</title>
-    <style>
-        body { background-color: #222; margin: 0; overflow: hidden; color: white; font-family: sans-serif; }
-        #game-container { display: inline-block; vertical-align: top; margin-left: 20px; }
-        canvas { width: 600px; height: 650px; border: 2px solid white; border-radius: 8px; }
-        #score { position: absolute; top: 20px; left: 20px; color: white; font-size: 24px; }
-        #enemyScoreBox { position: absolute; top: 60px; left: 20px; color: #ccc; font-size: 20px; }
-        #videoContainer { position: absolute; top: 100px; right: 20px; }
-        #enemyVideo { width: 300px; height: 300px; border: 2px solid white; border-radius: 8px; background: black; }
-        #controlPanel { text-align: center; margin-top: 10px; }
-        #controlPanel input, #controlPanel button { margin: 4px; padding: 6px 10px; font-size: 16px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>長井ゲーム（スマホ対応オンライン対戦）</title>
+  <style>
+    body {
+      background-color: #111;
+      margin: 0;
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
 
-    <!-- 必要ライブラリ -->
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="./matter.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.2.1.js"
-        integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
-        crossorigin="anonymous"></script>
+    #controlPanel {
+      text-align: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    #controlPanel input, #controlPanel button {
+      margin: 4px;
+      padding: 6px 10px;
+      font-size: 16px;
+    }
+
+    #game-wrapper {
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+      width: 100%;
+      max-width: 1200px;
+    }
+
+    #game-container, #enemy-container {
+      position: relative;
+      margin: 5px;
+      border: 2px solid white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    #enemyVideo {
+      width: 100%;
+      height: auto;
+      background: black;
+      border-radius: 10px;
+    }
+
+    #score {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      font-size: 18px;
+    }
+
+    #ranking {
+      margin-top: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 8px;
+      max-width: 300px;
+      width: 90%;
+    }
+
+    #ranking h3 {
+      margin: 0;
+      font-size: 18px;
+      border-bottom: 1px solid #666;
+      padding-bottom: 4px;
+    }
+
+    #ranking-list {
+      margin-top: 8px;
+      list-style: none;
+      padding: 0;
+      font-size: 16px;
+    }
+  </style>
+
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="./matter.min.js"></script>
 </head>
-
 <body>
-    <!-- コントロールパネル -->
-    <div id="controlPanel">
-        <input id="myCustomId" placeholder="自分のIDを入力（任意）">
-        <button id="createRoom">ルーム作成</button>
-        <input id="joinId" placeholder="相手のIDを入力">
-        <button id="joinRoom">接続</button><br>
-        あなたのID: <span id="myId">未発行</span><br>
-        相手スコア: <span id="enemyScoreDisplay">0</span>
+  <div id="controlPanel">
+    <input id="myCustomId" placeholder="自分のID（任意）">
+    <button id="createRoom">ルーム作成</button>
+    <input id="joinId" placeholder="相手のID">
+    <button id="joinRoom">接続</button><br>
+    あなたのID: <span id="myId">未発行</span> ／ 相手スコア: <span id="enemyScoreDisplay">0</span>
+  </div>
+
+  <div id="game-wrapper">
+    <div id="game-container">
+      <div id="score">スコア: <span id="score-value">0</span></div>
+      <canvas id="gameCanvas"></canvas>
     </div>
-
-    <!-- ゲーム＋相手画面を横並びにするコンテナ -->
-    <div id="game-and-enemy" style="display:flex; margin-top:10px; align-items:flex-start; gap:20px;">
-        <div id="game-container"></div>  <!-- 自分のゲーム画面 -->
-        <video id="enemyVideo" autoplay playsinline style="width:300px; height:300px; border:2px solid white; border-radius:8px; background:black;"></video>
+    <div id="enemy-container">
+      <video id="enemyVideo" autoplay playsinline></video>
     </div>
+  </div>
 
-    <!-- スコア表示 -->
-    <div id="score">スコア: <span id="score-value">0</span></div>
+  <div id="ranking">
+    <h3>🏆 スコアランキング</h3>
+    <ul id="ranking-list"></ul>
+  </div>
 
-    <!-- ランキングは右下に固定 -->
-    <div id="rankingPanel" style="position:absolute; top:420px; right:20px; width:300px; background:rgba(0,0,0,0.6); color:white; padding:10px; border-radius:8px; font-size:16px;">
-        <h3>ランキング</h3>
-        <ol id="rankingList"></ol>
-    </div>
-
-    <script src="./script.js"></script>
+  <script src="./script.js"></script>
 </body>
-
 </html>
