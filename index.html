@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>長井ゲーム（スマホ対応オンライン対戦）</title>
   <style>
     body {
       background-color: #111;
       margin: 0;
-      color: white;
       font-family: sans-serif;
+      color: white;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -18,21 +18,25 @@
 
     #controlPanel {
       text-align: center;
-      margin-top: 10px;
+      margin: 10px;
+      display: flex;
       flex-wrap: wrap;
+      justify-content: center;
     }
 
     #controlPanel input, #controlPanel button {
       margin: 4px;
       padding: 6px 10px;
       font-size: 16px;
+      border-radius: 6px;
+      border: none;
     }
 
     #game-wrapper {
       display: flex;
-      flex-direction: row;
       flex-wrap: wrap;
       justify-content: center;
+      gap: 10px;
       margin-top: 10px;
       width: 100%;
       max-width: 1200px;
@@ -40,23 +44,20 @@
 
     #game-container, #enemy-container {
       position: relative;
-      margin: 5px;
+      background: #222;
       border: 2px solid white;
       border-radius: 10px;
       overflow: hidden;
+      width: 90vw;
+      max-width: 600px;
+      height: 600px;
     }
 
-    canvas {
+    #enemy-container video {
       width: 100%;
-      height: auto;
-      display: block;
-    }
-
-    #enemyVideo {
-      width: 100%;
-      height: auto;
+      height: 100%;
+      object-fit: cover;
       background: black;
-      border-radius: 10px;
     }
 
     #score {
@@ -88,12 +89,21 @@
       padding: 0;
       font-size: 16px;
     }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: url("img/game2202-.jpg") center/cover no-repeat;
+    }
   </style>
 
+  <!-- 必要ライブラリ -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script src="./matter.min.js"></script>
 </head>
+
 <body>
   <div id="controlPanel">
     <input id="myCustomId" placeholder="自分のID（任意）">
