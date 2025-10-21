@@ -1,29 +1,31 @@
 const { Engine, Render, Runner, World, Bodies, Events } = Matter;
-let engine = Engine.create();
-let world = engine.world;
-let canvas = document.getElementById("gameCanvas");
 
-let render = Render.create({
+// 物理エンジン設定
+const engine = Engine.create();
+const world = engine.world;
+const canvas = document.getElementById("gameCanvas");
+const render = Render.create({
   canvas: canvas,
   engine: engine,
   options: {
     wireframes: false,
-    background: "img/game2202-.jpg",
-    width: window.innerWidth < 600 ? 320 : 600,
-    height: 600
+    width: 600,
+    height: 600,
+    background: "transparent"
   }
 });
-
 Render.run(render);
 Runner.run(Runner.create(), engine);
+
+// 地面
+const ground = Bodies.rectangle(300, 580, 600, 40, { isStatic: true });
+World.add(world, ground);
 
 let score = 0;
 let scoreDisplay = document.getElementById("score-value");
 let enemyScoreDisplay = document.getElementById("enemyScoreDisplay");
-let ground = Bodies.rectangle(300, 580, 600, 40, { isStatic: true });
-World.add(world, ground);
 
-// 🎯 ランダムボール生成（ゲームオーバーラインより下）
+// 🔹 ボール生成（ゲームオーバーライン下）
 function spawnBall() {
   const x = Math.random() * 500 + 50;
   const y = Math.random() * 40 + 520;
@@ -33,9 +35,9 @@ function spawnBall() {
   });
   World.add(world, ball);
 }
-setInterval(spawnBall, 2000);
+setInterval(spawnBall, 2500);
 
-// 💾 スコアランキング保存
+// 💾 スコアランキング管理
 function saveScore(name, value) {
   let ranking = JSON.parse(localStorage.getItem("ranking") || "[]");
   ranking.push({ name, value });
@@ -52,7 +54,7 @@ function displayRanking() {
 }
 displayRanking();
 
-// 🧩 PeerJS 通信設定
+// 🧩 PeerJS 通信
 let peer, conn;
 const myIdSpan = document.getElementById("myId");
 
@@ -78,7 +80,7 @@ function setupConnection(c) {
   });
 }
 
-// 💥 スコア加算イベント
+// 💥 衝突スコア
 Events.on(engine, "collisionStart", e => {
   e.pairs.forEach(pair => {
     if (!pair.bodyA.isStatic && !pair.bodyB.isStatic) {
@@ -90,8 +92,9 @@ Events.on(engine, "collisionStart", e => {
   });
 });
 
-// 📱 画面サイズに合わせてリサイズ
+// 📱 画面リサイズ対応
 window.addEventListener("resize", () => {
-  render.canvas.width = window.innerWidth < 600 ? 320 : 600;
+  const width = Math.min(window.innerWidth * 0.9, 600);
+  render.canvas.width = width;
   render.canvas.height = 600;
 });
